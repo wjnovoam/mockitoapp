@@ -1,17 +1,26 @@
 package org.wjnovoam.appmockito.ejemplos.repositories;
 
+import org.wjnovoam.appmockito.ejemplos.Datos;
 import org.wjnovoam.appmockito.ejemplos.models.Examen;
 
-import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 public class ExamenRepositoryImpl implements ExamenRepository{
+    @Override
+    public Examen guardar(Examen examen) {
+        System.out.println("ExamenRepositoryImpl.guardar");
+        return Datos.EXAMEN;
+    }
 
     @Override
     public List<Examen> findAll() {
-        return Arrays.asList(new Examen(5L, "Matematicas"),
-                new Examen(5L, "Lenguaje"),
-                new Examen(5L, "Historial"),
-                new Examen(5L, "Español"));
+        System.out.println("ExamenRepositoryImpl.findAll");
+        try {
+            TimeUnit.SECONDS.sleep(5);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+            return Datos.EXAMENES;
     }
 }
