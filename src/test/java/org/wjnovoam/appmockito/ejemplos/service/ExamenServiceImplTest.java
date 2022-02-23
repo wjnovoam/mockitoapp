@@ -1,6 +1,7 @@
 package org.wjnovoam.appmockito.ejemplos.service;
 
 import org.junit.jupiter.api.Test;
+
 import static org.mockito.Mockito.*;
 
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -51,12 +52,12 @@ class ExamenServiceImplTest {
         Optional<Examen> examen = examenService.findExamenPorNombre("Lenguaje");
 
         assertTrue(examen.isPresent());
-        assertEquals(5L,examen.get().getId());
+        assertEquals(5L, examen.get().getId());
         assertEquals("Lenguaje", examen.get().getNombre());
     }
 
     @Test
-    void findExamenPorNombreListaVacia(){
+    void findExamenPorNombreListaVacia() {
         List<Examen> datos = Collections.emptyList();
         when(examenRepository.findAll()).thenReturn(datos);
 
@@ -70,7 +71,7 @@ class ExamenServiceImplTest {
     void testPreguntasExamen() {
         when(examenRepository.findAll()).thenReturn(Datos.EXAMENES);
         when(preguntaRepository.findPreguntasPorExamenId(anyLong())).thenReturn(Datos.PREGUNTAS);
-        Examen examen  = examenService.findExamenPorNombreConPreguntas("Matematicas");
+        Examen examen = examenService.findExamenPorNombreConPreguntas("Matematicas");
 
         assertEquals(5, examen.getPreguntas().size());
         assertTrue(examen.getPreguntas().contains("aritmetica"));
@@ -81,7 +82,7 @@ class ExamenServiceImplTest {
     void testPreguntasExamenVerify() {
         when(examenRepository.findAll()).thenReturn(Datos.EXAMENES);
         when(preguntaRepository.findPreguntasPorExamenId(anyLong())).thenReturn(Datos.PREGUNTAS);
-        Examen examen  = examenService.findExamenPorNombreConPreguntas("Matematicas");
+        Examen examen = examenService.findExamenPorNombreConPreguntas("Matematicas");
 
         assertEquals(5, examen.getPreguntas().size());
         assertTrue(examen.getPreguntas().contains("aritmetica"));
@@ -96,7 +97,7 @@ class ExamenServiceImplTest {
         when(preguntaRepository.findPreguntasPorExamenId(anyLong())).thenReturn(Datos.PREGUNTAS);
 
         //When
-        Examen examen  = examenService.findExamenPorNombreConPreguntas("Matematicas");
+        Examen examen = examenService.findExamenPorNombreConPreguntas("Matematicas");
 
         //Then
         assertNull(examen);
@@ -112,7 +113,7 @@ class ExamenServiceImplTest {
         newExamen.setPreguntas(Datos.PREGUNTAS);
 
         //Simular el agregado de un id automatico
-        when(examenRepository.guardar(any(Examen.class))).then(new Answer<Examen>(){
+        when(examenRepository.guardar(any(Examen.class))).then(new Answer<Examen>() {
 
             Long secuencia = 8L;
 
@@ -183,7 +184,7 @@ class ExamenServiceImplTest {
         verify(preguntaRepository).findPreguntasPorExamenId(argThat(new MiArgsMatchers()));
     }
 
-    public static  class MiArgsMatchers implements ArgumentMatcher<Long>{
+    public static class MiArgsMatchers implements ArgumentMatcher<Long> {
 
         private Long argument;
 
@@ -216,7 +217,7 @@ class ExamenServiceImplTest {
         Examen examen = Datos.EXAMEN;
         examen.setPreguntas(Datos.PREGUNTAS);
         doThrow(IllegalArgumentException.class).when(preguntaRepository).guardarVarias(anyList());
-        assertThrows(IllegalArgumentException.class, ()-> {
+        assertThrows(IllegalArgumentException.class, () -> {
             examenService.guardar(examen);
         });
     }
@@ -224,7 +225,7 @@ class ExamenServiceImplTest {
     @Test
     void testDoAnswer() {
         when(examenRepository.findAll()).thenReturn(Datos.EXAMENES);
-       //when(preguntaRepository.findPreguntasPorExamenId(anyLong())).thenReturn(Datos.PREGUNTAS);
+        //when(preguntaRepository.findPreguntasPorExamenId(anyLong())).thenReturn(Datos.PREGUNTAS);
         doAnswer(invocationOnMock -> {
             Long id = invocationOnMock.getArgument(0);
             return id == 5L ? Datos.PREGUNTAS : Collections.emptyList();
@@ -247,7 +248,7 @@ class ExamenServiceImplTest {
         Examen newExamen = Datos.EXAMEN;
         newExamen.setPreguntas(Datos.PREGUNTAS);
 
-        doAnswer(new Answer<Examen>(){
+        doAnswer(new Answer<Examen>() {
             Long secuencia = 8L;
 
             @Override
@@ -299,4 +300,77 @@ class ExamenServiceImplTest {
         assertTrue(examen.getPreguntas().contains("integrales"));
 
     }
+
+    //verificar el orden  de los metodos mock
+
+    @Test
+    void testOrdenDeInvocacion() {
+        when(examenRepository.findAll()).thenReturn(Datos.EXAMENES);
+
+        examenService.findExamenPorNombreConPreguntas("Matematicas");
+        examenService.findExamenPorNombreConPreguntas("Lenguaje");
+
+        InOrder inOrder = inOrder(preguntaRepository);
+        inOrder.verify(preguntaRepository).findPreguntasPorExamenId(5L);
+        inOrder.verify(preguntaRepository).findPreguntasPorExamenId(6L);
+    }
+
+    @Test
+    void testOrdenDeInvocacion2() {
+        when(examenRepository.findAll()).thenReturn(Datos.EXAMENES);
+
+        examenService.findExamenPorNombreConPreguntas("Matematicas");
+        examenService.findExamenPorNombreConPreguntas("Lenguaje");
+
+        InOrder inOrder = inOrder(examenRepository, preguntaRepository);
+        inOrder.verify(examenRepository).findAll();
+        inOrder.verify(preguntaRepository).findPreguntasPorExamenId(5L);
+
+        inOrder.verify(examenRepository).findAll();
+        inOrder.verify(preguntaRepository).findPreguntasPorExamenId(6L);
+    }
+
+
+    //Ceuntas veces se ejecuta un metodo mock
+
+    @Test
+    void testNumeroDeInvocaciones() {
+        when(examenRepository.findAll()).thenReturn(Datos.EXAMENES);
+        examenService.findExamenPorNombreConPreguntas("Matematicas");
+
+        verify(preguntaRepository).findPreguntasPorExamenId(5L);
+        verify(preguntaRepository, times(1)).findPreguntasPorExamenId(5L);
+        verify(preguntaRepository, atLeast(1)).findPreguntasPorExamenId(5L);
+        verify(preguntaRepository, atLeastOnce()).findPreguntasPorExamenId(5L);
+        verify(preguntaRepository, atMost(1)).findPreguntasPorExamenId(5L); //Como maximo se ejecuta las veces
+        verify(preguntaRepository, atMostOnce()).findPreguntasPorExamenId(5L); //a lo maximo se ejecuta una sola vez
+    }
+
+    @Test
+    void testNumeroDeInvocaciones2() {
+        when(examenRepository.findAll()).thenReturn(Datos.EXAMENES);
+        examenService.findExamenPorNombreConPreguntas("Matematicas");
+
+        //verify(preguntaRepository).findPreguntasPorExamenId(5L);
+        verify(preguntaRepository, times(2)).findPreguntasPorExamenId(5L);
+        verify(preguntaRepository, atLeast(1)).findPreguntasPorExamenId(5L);
+        verify(preguntaRepository, atLeastOnce()).findPreguntasPorExamenId(5L);
+        verify(preguntaRepository, atMost(20)).findPreguntasPorExamenId(5L); //Como maximo se ejecuta las veces
+        //verify(preguntaRepository, atMostOnce()).findPreguntasPorExamenId(5L); //a lo maximo se ejecuta una sola vez
+    }
+
+
+    @Test
+    void testNumeroDeInvocaciones3() {
+        when(examenRepository.findAll()).thenReturn(Collections.emptyList());
+        examenService.findExamenPorNombreConPreguntas("Matematicas");
+
+        verify(preguntaRepository,never()).findPreguntasPorExamenId(5L); //never -> nunca se utiliza este metodo
+        verifyNoInteractions(preguntaRepository); //no interactua con este modulo
+
+        verify(examenRepository).findAll();
+        verify(examenRepository,times(1)).findAll();
+
+    }
+
 }

@@ -7,7 +7,7 @@ import java.util.List;
 
 public class Datos {
     public final static List<Examen> EXAMENES = Arrays.asList(new Examen(5L, "Matematicas"),
-            new Examen(5L, "Lenguaje"), new Examen(2L, "Historial"),
+            new Examen(6L, "Lenguaje"), new Examen(2L, "Historial"),
             new Examen(1L, "Español"));
 
     public final static List<Examen> EXAMENES_ID_NULL = Arrays.asList(new Examen(null, "Matematicas"),
